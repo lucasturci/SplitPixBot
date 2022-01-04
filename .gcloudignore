@@ -3,3 +3,4 @@ telegram-token.txt
 .gcloudignore
 .gitignore
 .git
+local

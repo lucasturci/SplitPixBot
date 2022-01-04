@@ -16,3 +16,6 @@
 
 # Telegram auth token
 telegram-token.txt
+
+# Cloud functions URL
+webhook-url.txt
