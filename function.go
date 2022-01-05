@@ -6,13 +6,10 @@ import (
 	"os"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/lucasturci/SplitPixBot/commands"
 )
 
-func HandleUpdate(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
-	if update.Message == nil {
-		return nil
-	}
-
+func echo(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 	log.Printf("Replying to message ID (%v) with body (%v)", update.Message.MessageID, update.Message.Text)
 
 	// Now that we know we've gotten a new message, we can construct a
@@ -31,8 +28,31 @@ func HandleUpdate(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 		log.Printf("Error when sending message reply to message id (%v): %s", update.Message.MessageID, err.Error())
 		return err
 	}
-
 	return nil
+}
+
+func HandleUpdate(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
+
+	// We will only ever react to message updates
+	if update.Message == nil {
+		return nil
+	}
+
+	log.Printf("AAAAAAAA %+v", update.Message)
+
+	// If it is a command, then let's parse it. Else, we will echo the message
+	if update.Message.IsCommand() {
+		command := update.Message.Command()
+		commandHandler, exists := commands.CommandHandlerMap[command]
+		if exists {
+			commandHandler(bot, update.Message)
+		} else {
+			log.Printf("Unrecognized command %s. Ignoring", command)
+		}
+		return nil
+	}
+
+	return echo(bot, update)
 }
 
 func Handle(w http.ResponseWriter, r *http.Request) {
