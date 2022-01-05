@@ -33,26 +33,29 @@ func echo(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 
 func HandleUpdate(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 
-	// We will only ever react to message updates
-	if update.Message == nil {
-		return nil
-	}
-
-	log.Printf("AAAAAAAA %+v", update.Message)
-
-	// If it is a command, then let's parse it. Else, we will echo the message
-	if update.Message.IsCommand() {
-		command := update.Message.Command()
-		commandHandler, exists := commands.CommandHandlerMap[command]
-		if exists {
-			commandHandler(bot, update.Message)
-		} else {
-			log.Printf("Unrecognized command %s. Ignoring", command)
+	if update.Message != nil { // message
+		if update.Message.IsCommand() {
+			command := update.Message.Command()
+			commandHandler, exists := commands.CommandHandlerMap[command]
+			if exists {
+				commandHandler(bot, update.Message)
+			} else {
+				log.Printf("Unrecognized command %s. Ignoring", command)
+			}
+			return nil
 		}
-		return nil
+
+		return echo(bot, update) // just echo
+	} else if update.CallbackQuery != nil { // user pressed an inline button
+		query, exists := commands.CallbackQueryMap[update.CallbackData()]
+		if exists {
+			query(bot, update.CallbackQuery)
+		} else {
+			log.Printf("Unrecognized data %s. Ignoring", update.CallbackData())
+		}
 	}
 
-	return echo(bot, update)
+	return nil
 }
 
 func Handle(w http.ResponseWriter, r *http.Request) {
